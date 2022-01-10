@@ -1,0 +1,12 @@
+================================================================================
+                                                       *nvim-python-repl.nvim*
+
+nvim-python-repl is a simple plugin for sending commands to a python repl. It
+leverages treesitter to send statements, functions definitions, class
+definitions, etc. to an ipython REPL. 
+
+
+send_statement_definition                              *send_statment_definition*
+    Function to send the appropriate text to the REPL (will open new REPL if
+    none open)
+================================================================================
