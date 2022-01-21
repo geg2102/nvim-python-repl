@@ -79,7 +79,6 @@ local visual_selection_range = function()
   end
 end
 
-
 local construct_message_from_selection = function (start_row, start_col, end_row, end_col)
     local bufnr = api.nvim_get_current_buf()
     if start_row ~= end_row then
@@ -97,6 +96,12 @@ local construct_message_from_selection = function (start_row, start_col, end_row
     end
 end
 
+local construct_message_from_buffer = function()
+    local bufnr = api.nvim_get_current_buf()
+    local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    return lines
+end
+
 M.send_visual_to_repl = function ()
     local start_row, start_col, end_row, end_col = visual_selection_range()
     local message = construct_message_from_selection(start_row, start_col, end_row, end_col)
@@ -111,5 +116,16 @@ M.send_visual_to_repl = function ()
     end
 end
 
-
+M.send_buffer_to_repl = function()
+    local message = construct_message_from_buffer()
+    message = table.concat(message, "\r")
+    if M.term.opened == 0 then
+        term_open()
+    end
+    vim.wait(600)
+    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
+    if M.term.chanid ~= nil then
+        api.nvim_chan_send(M.term.chanid, message)
+    end
+end
 return M
