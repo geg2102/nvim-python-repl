@@ -63,7 +63,7 @@ M.send_statement_definition = function ()
         term_open()
     end
     vim.wait(600)
-    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
+    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
     if M.term.chanid ~= nil then
         api.nvim_chan_send(M.term.chanid, message)
     end
@@ -110,7 +110,7 @@ M.send_visual_to_repl = function ()
         term_open()
     end
     vim.wait(600)
-    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
+    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
     if M.term.chanid ~= nil then
         api.nvim_chan_send(M.term.chanid, message)
     end
@@ -123,7 +123,7 @@ M.send_buffer_to_repl = function()
         term_open()
     end
     vim.wait(600)
-    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
+    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
     if M.term.chanid ~= nil then
         api.nvim_chan_send(M.term.chanid, message)
     end
