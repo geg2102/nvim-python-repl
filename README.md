@@ -11,11 +11,9 @@ vim.api.nvim_set_keymap('n', [your keymap], ":SendPyObject<CR>", {noremap=true, 
 ``` 
 
 ```
-vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>",
-{noremap=true, silent=true})
+vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>", {noremap=true, silent=true})
 ```
 
 ```
-vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true,
-silent=true})
+vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true, silent=true})
 ```
