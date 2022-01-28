@@ -9,7 +9,9 @@ endif
 command! SendPyObject              lua require("nvim-python-repl").send_statement_definition()
 command! SendPySelection           lua require("nvim-python-repl").send_visual_to_repl()
 command! SendPyBuffer              lua require("nvim-python-repl").send_buffer_to_repl()
+command! ToggleExecuteOnSend       lua require("nvim-python-repl").toggle_execute()
 
 nnoremap <silent> <leader>n :SendPyObject<CR>
+nnoremap <silent> <leader>e :ToggleExecuteOnSend<CR>
 nnoremap <silent> <leader>nr :SendPyBuffer<CR>
 vnoremap <silent> <leader>n :<C-U>SendPySelection<CR>

@@ -29,6 +29,8 @@ local select = function ()
     local _, start_column, _, _ = node:range()
     local message = table.concat(text, "\r")
     while start_column ~= 0 do
+        -- For empty blank lines
+        message = string.gsub(message, "\r\r+", "\r")
         -- For nested indents in classes/functions
         message = string.gsub(message, "\r%s%s%s%s", "\r")
         start_column = start_column - 4
@@ -55,18 +57,6 @@ local term_open = function()
     M.term.winid = win
     M.term.bufid = buf
     M.term.chanid = chan
-end
-
-M.send_statement_definition = function ()
-    local message = select()
-    if M.term.opened == 0 then
-        term_open()
-    end
-    vim.wait(600)
-    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
-    if M.term.chanid ~= nil then
-        api.nvim_chan_send(M.term.chanid, message)
-    end
 end
 
 local visual_selection_range = function()
@@ -102,7 +92,22 @@ local construct_message_from_buffer = function()
     return lines
 end
 
-M.send_visual_to_repl = function ()
+M.send_statement_definition = function (config)
+    local message = select()
+    if M.term.opened == 0 then
+        term_open()
+    end
+    vim.wait(600)
+    message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
+    if config.execute_on_send then
+        message = api.nvim_replace_termcodes(message .. "<cr>", true, false, true)
+    end
+    if M.term.chanid ~= nil then
+        api.nvim_chan_send(M.term.chanid, message)
+    end
+end
+
+M.send_visual_to_repl = function (config)
     local start_row, start_col, end_row, end_col = visual_selection_range()
     local message = construct_message_from_selection(start_row, start_col, end_row, end_col)
     message = table.concat(message, "\r")
@@ -111,18 +116,24 @@ M.send_visual_to_repl = function ()
     end
     vim.wait(600)
     message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
+    if config.execute_on_send then
+        message = api.nvim_replace_termcodes(message .. "<cr>", true, false, true)
+    end
     if M.term.chanid ~= nil then
         api.nvim_chan_send(M.term.chanid, message)
     end
 end
 
-M.send_buffer_to_repl = function()
+M.send_buffer_to_repl = function(config)
     local message = construct_message_from_buffer()
     message = table.concat(message, "\r")
     if M.term.opened == 0 then
         term_open()
     end
     vim.wait(600)
+    if config.execute_on_send then
+        message = api.nvim_replace_termcodes(message .. "<cr>", true, false, true)
+    end
     message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
     if M.term.chanid ~= nil then
         api.nvim_chan_send(M.term.chanid, message)
