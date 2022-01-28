@@ -39,12 +39,22 @@ local select = function ()
 end
 
 local term_open = function()
+    local orig_win = vim.api.nvim_get_current_win()
     if M.term.chanid ~= nil then return end
     api.nvim_command('vsplit')
     local buf = vim.api.nvim_create_buf(true, true)
     local win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(win,buf)
-    local chan = vim.fn.termopen('ipython', {
+    local repl = nil
+    if vim.opt.filetype:get() == "python" then
+        repl = "ipython"
+    elseif vim.opt.filetype:get() == "lua" then
+        print("here")
+        repl = "lua"
+    else
+        repl = nil
+    end
+    local chan = vim.fn.termopen(repl, {
         on_exit = function ()
             M.term.chanid = nil
             M.term.opened = 0
@@ -57,6 +67,7 @@ local term_open = function()
     M.term.winid = win
     M.term.bufid = buf
     M.term.chanid = chan
+    api.nvim_set_current_win(orig_win)
 end
 
 local visual_selection_range = function()
