@@ -45,16 +45,7 @@ local term_open = function()
     local buf = vim.api.nvim_create_buf(true, true)
     local win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(win,buf)
-    local repl = nil
-    if vim.opt.filetype:get() == "python" then
-        repl = "ipython"
-    elseif vim.opt.filetype:get() == "lua" then
-        print("here")
-        repl = "lua"
-    else
-        repl = nil
-    end
-    local chan = vim.fn.termopen(repl, {
+    local chan = vim.fn.termopen('ipython', {
         on_exit = function ()
             M.term.chanid = nil
             M.term.opened = 0
