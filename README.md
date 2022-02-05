@@ -11,7 +11,7 @@ from visual mode.
 Can be installed with any plugin manager. For example, in packer you can use 
 
 ```
-use geg2102/nvim-python-repl
+use "geg2102/nvim-python-repl"
 ```
 
 Somewhere in your init.lua/init.vim you should place 
@@ -46,7 +46,7 @@ vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true, 
 
 ### Options
 The only option for now is whether to execute the given expression on send. By default
-this is set to true, but this can be toggled with `<leader>e`. You can also change  the
+this is set to true, but this can be toggled with `<leader>e` or `:ToggleExecuteOnSend`. You can also change  the
 default behavior with 
 
 
