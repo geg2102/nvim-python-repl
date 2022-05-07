@@ -29,14 +29,17 @@ In visual mode, `<leader>n` sends visual selection to repl.
 
 Default keymapping for sending the entire buffer is `<leader>nr`. 
 
-``` vim.api.nvim_set_keymap('n', [your keymap], ":SendPyObject<CR>", {noremap=true,
-silent=true}) ``` 
+```
+vim.api.nvim_set_keymap('n', [your keymap], ":SendPyObject<CR>", {noremap=true, silent=true}) 
+``` 
 
-``` vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>",
-{noremap=true, silent=true}) ```
+``` 
+vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>",{noremap=true, silent=true}) 
+```
 
-``` vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true,
-silent=true}) ```
+``` 
+vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true,silent=true}) 
+```
 
 ### Options There are only two options: whether to execute the given expression on send
 or whether to send to vertical split. By default these are set to true. Toggle on send
