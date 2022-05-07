@@ -22,14 +22,16 @@ local visual_selection_range = function()
   end
 end
 
-
 local get_statement_definition = function()
     local node = ts_utils.get_node_at_cursor()
     if (node:named() == false) then
         error("Node not recognized. Check to ensure treesitter parser is installed.")
     end
 
-    while (string.match(node:sexpr(), "statement") == nil and string.match(node:sexpr(), "definition") == nil) do
+    while (
+        string.match(node:sexpr(), "statement") == nil and 
+        string.match(node:sexpr(), "definition") == nil and
+        string.match(node:sexpr(), "call_expression") == nil) do
         node = node:parent()
     end
     return node
@@ -98,17 +100,19 @@ local construct_message_from_buffer = function()
     return lines
 end
 
-local construct_message_from_node = function ()
+local construct_message_from_node = function (filetype)
     local node = get_statement_definition()
     local bufnr = api.nvim_get_current_buf()
     local message = vim.treesitter.query.get_node_text(node, bufnr)
-    local _, start_column, _, _ = node:range()
-    while start_column ~= 0 do
-        -- For empty blank lines
-        message = string.gsub(message, "\n\n+", "\n")
-        -- For nested indents in classes/functions
-        message = string.gsub(message, "\n%s%s%s%s", "\n")
-        start_column = start_column - 4
+    if filetype=="python" then
+        local _, start_column, _, _ = node:range()
+        while start_column ~= 0 do
+            -- For empty blank lines
+            message = string.gsub(message, "\n\n+", "\n")
+            -- For nested indents in classes/functions
+            message = string.gsub(message, "\n%s%s%s%s", "\n")
+            start_column = start_column - 4
+        end
     end
     return message
 end
