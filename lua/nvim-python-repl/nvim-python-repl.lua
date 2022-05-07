@@ -123,7 +123,7 @@ local send_message = function(message,config)
     if filetype == "python" then
         message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
     elseif filetype == "scala" then
-        message = api.nvim_replace_termcodes("<esc>{<cr>" .. message .. "<cr><esc>}", true, false, true)
+        message = api.nvim_replace_termcodes("{<cr>" .. message .. "<cr>}", true, false, true)
     end
     if config.execute_on_send then
         message = api.nvim_replace_termcodes(message .. "<cr>", true, false, true)
