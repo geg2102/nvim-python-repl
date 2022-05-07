@@ -41,7 +41,8 @@ vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>",{noremap
 vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true,silent=true}) 
 ```
 
-### Options There are only two options: whether to execute the given expression on send
+### Options 
+There are only two options: whether to execute the given expression on send
 or whether to send to vertical split. By default these are set to true. Toggle on send
 can be toggled with `<leader>e` or `:ToggleExecuteOnSend`. Whether to send to vertical
 by default can be changed with `:ReplToggleVertical` or `:lua
