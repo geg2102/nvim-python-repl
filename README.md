@@ -2,23 +2,20 @@
 
 [![asciicast](https://asciinema.org/a/460861.svg)](https://asciinema.org/a/460861)
 
-A simple plugin leveraging treesitter to send expressions, statements, function
-definitions and class definitions to an ipython REPL. Also supports sending selection
-from visual mode. 
+A simple plugin that leverages treesitter to send expressions, statements, function
+definitions and class definitions to a REPL. It currently only supports sending to an
+ipython or ammonite REPL. In addition to sending treesitter objects, there is also
+support for sending a selection from visual mode. 
 
 ### Usage 
 
 Can be installed with any plugin manager. For example, in packer you can use 
 
-```
-use "geg2102/nvim-python-repl"
-```
+``` use "geg2102/nvim-python-repl" ```
 
 Somewhere in your init.lua/init.vim you should place 
 
-```
-require("nvim-python-repl").setup()
-```
+``` require("nvim-python-repl").setup() ```
 
 ### Keymaps
 
@@ -32,24 +29,22 @@ In visual mode, `<leader>n` sends visual selection to repl.
 
 Default keymapping for sending the entire buffer is `<leader>nr`. 
 
-```
-vim.api.nvim_set_keymap('n', [your keymap], ":SendPyObject<CR>", {noremap=true, silent=true})
-``` 
+``` vim.api.nvim_set_keymap('n', [your keymap], ":SendPyObject<CR>", {noremap=true,
+silent=true}) ``` 
 
-```
-vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>", {noremap=true, silent=true})
-```
+``` vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>",
+{noremap=true, silent=true}) ```
 
-```
-vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true, silent=true})
-```
+``` vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true,
+silent=true}) ```
 
-### Options
-The only option for now is whether to execute the given expression on send. By default
-this is set to true, but this can be toggled with `<leader>e` or `:ToggleExecuteOnSend`. You can also change  the
-default behavior with 
+### Options There are only two options: whether to execute the given expression on send
+or whether to send to vertical split. By default these are set to true. Toggle on send
+can be toggled with `<leader>e` or `:ToggleExecuteOnSend`. Whether to send to vertical
+by default can be changed with `:ReplToggleVertical` or `:lua
+require("nvim-python-repl").toggle_vertical()`. 
 
+You can also change the default behavior in your initial setup with: 
 
-```
-require("nvim-python-repl").setup({execute_on_send=false})
-```
+``` require("nvim-python-repl").setup({execute_on_send=false, vsplit=false}) ```
+
