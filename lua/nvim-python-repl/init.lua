@@ -32,5 +32,11 @@ function M.toggle_execute()
     print("execute_on_send=" .. tostring(not original))
 end
 
+function M.toggle_vertical()
+    local original = config.defaults["vsplit"]
+    config.defaults["vsplit"] = not original
+    print("vsplit=" .. tostring(not original))
+end
+
 return M
 

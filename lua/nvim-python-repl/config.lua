@@ -1,5 +1,6 @@
 local defaults = {
-    execute_on_send = true
+    execute_on_send = true,
+    vsplit = true
 }
 
 local function set(_, key, value)
