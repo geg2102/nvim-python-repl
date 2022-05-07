@@ -25,14 +25,13 @@ end
 local select = function ()
     local node = get_statement_definition()
     local bufnr = api.nvim_get_current_buf()
-    local text = ts_utils.get_node_text(node, bufnr)
+    local message = vim.treesitter.query.get_node_text(node, bufnr)
     local _, start_column, _, _ = node:range()
-    local message = table.concat(text, "\r")
     while start_column ~= 0 do
         -- For empty blank lines
-        message = string.gsub(message, "\r\r+", "\r")
+        message = string.gsub(message, "\n\n+", "\n")
         -- For nested indents in classes/functions
-        message = string.gsub(message, "\r%s%s%s%s", "\r")
+        message = string.gsub(message, "\n%s%s%s%s", "\n")
         start_column = start_column - 4
     end
     return message
@@ -112,7 +111,7 @@ end
 M.send_visual_to_repl = function (config)
     local start_row, start_col, end_row, end_col = visual_selection_range()
     local message = construct_message_from_selection(start_row, start_col, end_row, end_col)
-    message = table.concat(message, "\r")
+    message = table.concat(message, "\n")
     if M.term.opened == 0 then
         term_open()
     end
@@ -128,7 +127,7 @@ end
 
 M.send_buffer_to_repl = function(config)
     local message = construct_message_from_buffer()
-    message = table.concat(message, "\r")
+    message = table.concat(message, "\n")
     if M.term.opened == 0 then
         term_open()
     end
