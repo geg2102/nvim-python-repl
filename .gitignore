@@ -39,3 +39,7 @@ luac.out
 *.x86_64
 *.hex
 
+
+dev/init.lua
+test.py
+test.scala
