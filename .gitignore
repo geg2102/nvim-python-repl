@@ -43,3 +43,4 @@ luac.out
 dev/init.lua
 test.py
 test.scala
+test.lua

@@ -10,6 +10,11 @@ M.term = {
     chanid = nil,
 }
 
+M.repls = {
+    python = "ipython",
+    scala = "amm",
+    lua = "ilua"
+}
 
 -- HELPERS
 local visual_selection_range = function()
@@ -22,17 +27,30 @@ local visual_selection_range = function()
   end
 end
 
-local get_statement_definition = function()
+local get_statement_definition = function(filetype)
     local node = ts_utils.get_node_at_cursor()
     if (node:named() == false) then
         error("Node not recognized. Check to ensure treesitter parser is installed.")
     end
-
-    while (
-        string.match(node:sexpr(), "statement") == nil and 
-        string.match(node:sexpr(), "definition") == nil and
-        string.match(node:sexpr(), "call_expression") == nil) do
-        node = node:parent()
+    if filetype == "python" or filetype == "scala" then
+        while (
+            string.match(node:sexpr(), "statement") == nil and
+            string.match(node:sexpr(), "definition") == nil and
+            string.match(node:sexpr(), "call_expression") == nil) do
+            node = node:parent()
+        end
+    elseif filetype == "lua" then
+        while (
+            string.match(node:sexpr(), "for_statement") == nil and
+            string.match(node:sexpr(), "if_statement") == nil and
+            string.match(node:sexpr(), "while_statement") == nil and
+            string.match(node:sexpr(), "assignment_statement") == nil and
+            string.match(node:sexpr(), "function_definition") == nil and
+            string.match(node:sexpr(), "function_call") == nil and
+            string.match(node:sexpr(), "local_declaration") == nil
+            ) do
+            node = node:parent()
+        end
     end
     return node
 end
@@ -48,31 +66,28 @@ local term_open = function(filetype, config)
     local buf = vim.api.nvim_create_buf(true, true)
     local win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(win,buf)
+    local choice = ''
     if filetype=='scala' then
-        local chan = vim.fn.termopen('amm', {
-            on_exit = function ()
-                M.term.chanid = nil
-                M.term.opened = 0
-                M.term.winid = nil
-                M.term.bufid = nil
-            end
-        })
-        M.term.chanid = chan
+        choice = M.repls["scala"]
     elseif filetype=='python' then
-        local chan = vim.fn.termopen('ipython', {
-            on_exit = function ()
-                M.term.chanid = nil
-                M.term.opened = 0
-                M.term.winid = nil
-                M.term.bufid = nil
-            end
-        })
-        M.term.chanid = chan
+        choice = M.repls["python"]
+    elseif filetype=='lua' then
+        choice = M.repls["lua"]
     end
+    local chan = vim.fn.termopen(choice, {
+        on_exit = function ()
+            M.term.chanid = nil
+            M.term.opened = 0
+            M.term.winid = nil
+            M.term.bufid = nil
+        end
+    })
+    M.term.chanid = chan
     vim.bo.filetype = 'term'
     M.term.opened = 1
     M.term.winid = win
     M.term.bufid = buf
+    -- Return to original window
     api.nvim_set_current_win(orig_win)
 end
 
@@ -101,7 +116,7 @@ local construct_message_from_buffer = function()
 end
 
 local construct_message_from_node = function (filetype)
-    local node = get_statement_definition()
+    local node = get_statement_definition(filetype)
     local bufnr = api.nvim_get_current_buf()
     local message = vim.treesitter.query.get_node_text(node, bufnr)
     if filetype=="python" then
@@ -118,13 +133,12 @@ local construct_message_from_node = function (filetype)
 end
 
 
-local send_message = function(message,config)
-    local filetype = vim.bo.filetype
+local send_message = function(filetype, message,config)
     if M.term.opened == 0 then
         term_open(filetype, config)
     end
     vim.wait(600)
-    if filetype == "python" then
+    if filetype == "python" or filetype == "lua" then
         message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
     elseif filetype == "scala" then
         message = api.nvim_replace_termcodes("{<cr>" .. message .. "<cr>}", true, false, true)
@@ -139,20 +153,23 @@ end
 
 
 M.send_statement_definition = function (config)
-    local message = construct_message_from_node()
-    send_message(message,config)
+    local filetype = vim.bo.filetype
+    local message = construct_message_from_node(filetype)
+    send_message(filetype, message,config)
 end
 
 M.send_visual_to_repl = function (config)
+    local filetype = vim.bo.filetype
     local start_row, start_col, end_row, end_col = visual_selection_range()
     local message = construct_message_from_selection(start_row, start_col, end_row, end_col)
     message = table.concat(message, "\n")
-    send_message(message,config)
+    send_message(filetype, message,config)
 end
 
 M.send_buffer_to_repl = function(config)
+    local filetype = vim.bo.filetype
     local message = construct_message_from_buffer()
     message = table.concat(message, "\n")
-    send_message(message, config)
+    send_message(filetype, message, config)
 end
 return M
