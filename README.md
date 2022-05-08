@@ -2,10 +2,16 @@
 
 [![asciicast](https://asciinema.org/a/460861.svg)](https://asciinema.org/a/460861)
 
-A simple plugin that leverages treesitter to send expressions, statements, function
-definitions and class definitions to a REPL. It currently only supports sending to an
-ipython or ammonite REPL. In addition to sending treesitter objects, there is also
-support for sending a selection from visual mode. 
+A simple plugin that leverages treesitter to send expressions, statements,
+function definitions and class definitions to a REPL. 
+
+The plugin now supports three different filetypes: python, scala and lua. It is
+required that you have [ipython](https://ipython.org/),
+[ammonite](https://ammonite.io/), and [ilua](https://github.com/guysv/ilua)
+installed in your path respectively. 
+
+In addition to sending treesitter objects, there is also support for sending a
+selection from visual mode. 
 
 ### Usage 
 
@@ -50,5 +56,7 @@ require("nvim-python-repl").toggle_vertical()`.
 
 You can also change the default behavior in your initial setup with: 
 
-``` require("nvim-python-repl").setup({execute_on_send=false, vsplit=false}) ```
+``` 
+require("nvim-python-repl").setup({execute_on_send=false, vsplit=false}) 
+```
 
