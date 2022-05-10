@@ -61,7 +61,7 @@ local term_open = function(filetype, config)
     if config.vsplit then
         api.nvim_command('vsplit')
     else
-        api.nvim_command('split)')
+        api.nvim_command('split')
     end
     local buf = vim.api.nvim_create_buf(true, true)
     local win = vim.api.nvim_get_current_win()
@@ -132,7 +132,6 @@ local construct_message_from_node = function (filetype)
     return message
 end
 
-
 local send_message = function(filetype, message,config)
     if M.term.opened == 0 then
         term_open(filetype, config)
@@ -150,7 +149,6 @@ local send_message = function(filetype, message,config)
         api.nvim_chan_send(M.term.chanid, message)
     end
 end
-
 
 M.send_statement_definition = function (config)
     local filetype = vim.bo.filetype
