@@ -7,8 +7,9 @@ function definitions and class definitions to a REPL.
 
 The plugin now supports three different filetypes: python, scala and lua. It is
 required that you have [ipython](https://ipython.org/),
-[ammonite](https://ammonite.io/), and [ilua](https://github.com/guysv/ilua)
-installed in your path respectively. 
+[sbt](https://www.scala-sbt.org), and [ilua](https://github.com/guysv/ilua)
+installed in your path respectively. (Scala projects are expecting that the scala file
+is opened from the directory containing `build.sbt`).
 
 In addition to sending treesitter objects, there is also support for sending a
 selection from visual mode. 
