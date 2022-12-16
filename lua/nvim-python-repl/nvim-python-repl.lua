@@ -12,7 +12,7 @@ M.term = {
 
 M.repls = {
     python = "ipython",
-    scala = "amm",
+    scala = "sbt console",
     lua = "ilua"
 }
 
@@ -34,6 +34,7 @@ local get_statement_definition = function(filetype)
     end
     if filetype == "python" or filetype == "scala" then
         while (
+            string.match(node:sexpr(), "import") == nil and
             string.match(node:sexpr(), "statement") == nil and
             string.match(node:sexpr(), "definition") == nil and
             string.match(node:sexpr(), "call_expression") == nil) do
@@ -140,7 +141,7 @@ local send_message = function(filetype, message,config)
     if filetype == "python" or filetype == "lua" then
         message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
     elseif filetype == "scala" then
-        message = api.nvim_replace_termcodes("{<cr>" .. message .. "<cr>}", true, false, true)
+        message = api.nvim_replace_termcodes(":paste<cr>" .. message .. "<cr><C-d>", true, false, true)
     end
     if config.execute_on_send then
         message = api.nvim_replace_termcodes(message .. "<cr>", true, false, true)
@@ -160,14 +161,14 @@ M.send_visual_to_repl = function (config)
     local filetype = vim.bo.filetype
     local start_row, start_col, end_row, end_col = visual_selection_range()
     local message = construct_message_from_selection(start_row, start_col, end_row, end_col)
-    message = table.concat(message, "\n")
-    send_message(filetype, message,config)
+    local concat_message = table.concat(message, "\n")
+    send_message(filetype, concat_message,config)
 end
 
 M.send_buffer_to_repl = function(config)
     local filetype = vim.bo.filetype
     local message = construct_message_from_buffer()
-    message = table.concat(message, "\n")
-    send_message(filetype, message, config)
+    local concat_message = table.concat(message, "\n")
+    send_message(filetype, concat_message, config)
 end
 return M
