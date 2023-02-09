@@ -6,7 +6,7 @@ A simple plugin that leverages treesitter to send expressions, statements,
 function definitions and class definitions to a REPL. 
 
 The plugin now supports three different filetypes: python, scala and lua. It is
-required that you have [ipython](https://ipython.org/),
+suggested that you have [ipython](https://ipython.org/),
 [sbt](https://www.scala-sbt.org), and [ilua](https://github.com/guysv/ilua)
 installed in your path respectively. (Scala projects are expecting that the scala file
 is opened from the directory containing `build.sbt`).
@@ -49,15 +49,26 @@ vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true,s
 ```
 
 ### Options 
-There are only two options: whether to execute the given expression on send
-or whether to send to vertical split. By default these are set to true. Toggle on send
+There are a few options. First, whether to execute the given expression on send
+and second, whether to send to a vertical split. By default these are set to true. Toggle on send
 can be toggled with `<leader>e` or `:ToggleExecuteOnSend`. Whether to send to vertical
 by default can be changed with `:ReplToggleVertical` or `:lua
 require("nvim-python-repl").toggle_vertical()`. 
 
-You can also change the default behavior in your initial setup with: 
+
+There is an also an option to specify which spawn command you want to use for a given repl (passed as table). 
+
+Here is the default setup: 
 
 ``` 
-require("nvim-python-repl").setup({execute_on_send=false, vsplit=false}) 
+require("nvim-python-repl").setup({
+    execute_on_send=false, 
+    vsplit=false,
+    spawn_command={
+        python="ipython", 
+        scala="sbt console",
+        lua="ilua"
+    }
+}) 
 ```
 
