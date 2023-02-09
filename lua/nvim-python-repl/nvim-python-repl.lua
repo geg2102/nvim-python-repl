@@ -69,7 +69,6 @@ local term_open = function(filetype, config)
     elseif filetype == 'lua' then
         choice = config.spawn_command.lua
     end
-    P(choice)
     local chan = vim.fn.termopen(choice, {
         on_exit = function()
             M.term.chanid = nil
