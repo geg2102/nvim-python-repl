@@ -1,4 +1,4 @@
-local M={}
+local M = {}
 local repl = require("nvim-python-repl.nvim-python-repl")
 local config = require("nvim-python-repl.config")
 
@@ -8,8 +8,14 @@ function M.setup(options)
         __index = config.get
     })
     if options ~= nil then
-        for k, v1 in pairs(options) do
-            config.defaults[k] = v1
+        for k1, v1 in pairs(options) do
+            if (type(config.defaults[k1]) == "table") then
+                for k2, v2 in pairs(options[k1]) do
+                    config.defaults[k1][k2] = v2
+                end
+            else
+                config.defaults[k1] = v1
+            end
         end
     end
 end
@@ -39,4 +45,3 @@ function M.toggle_vertical()
 end
 
 return M
-

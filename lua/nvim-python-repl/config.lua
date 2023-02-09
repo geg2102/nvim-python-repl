@@ -1,6 +1,11 @@
 local defaults = {
     execute_on_send = true,
-    vsplit = true
+    vsplit = true,
+    spawn_command = {
+        python = "ipython",
+        scala = "sbt console",
+        lua = "ilua",
+    }
 }
 
 local function set(_, key, value)

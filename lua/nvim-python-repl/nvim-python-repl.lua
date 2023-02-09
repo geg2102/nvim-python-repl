@@ -10,21 +10,15 @@ M.term = {
     chanid = nil,
 }
 
-M.repls = {
-    python = "ipython",
-    scala = "sbt console",
-    lua = "ilua"
-}
-
 -- HELPERS
 local visual_selection_range = function()
-  local _, start_row, start_col, _ = unpack(vim.fn.getpos("'<"))
-  local _, end_row, end_col, _ = unpack(vim.fn.getpos("'>"))
-  if start_row < end_row or (start_row == end_row and start_col <= end_col) then
-    return start_row - 1, start_col - 1, end_row - 1, end_col
-  else
-    return end_row - 1, end_col - 1, start_row - 1, start_col
-  end
+    local _, start_row, start_col, _ = unpack(vim.fn.getpos("'<"))
+    local _, end_row, end_col, _ = unpack(vim.fn.getpos("'>"))
+    if start_row < end_row or (start_row == end_row and start_col <= end_col) then
+        return start_row - 1, start_col - 1, end_row - 1, end_col
+    else
+        return end_row - 1, end_col - 1, start_row - 1, start_col
+    end
 end
 
 local get_statement_definition = function(filetype)
@@ -35,20 +29,20 @@ local get_statement_definition = function(filetype)
     if filetype == "python" or filetype == "scala" then
         while (
             string.match(node:sexpr(), "import") == nil and
-            string.match(node:sexpr(), "statement") == nil and
-            string.match(node:sexpr(), "definition") == nil and
-            string.match(node:sexpr(), "call_expression") == nil) do
+                string.match(node:sexpr(), "statement") == nil and
+                string.match(node:sexpr(), "definition") == nil and
+                string.match(node:sexpr(), "call_expression") == nil) do
             node = node:parent()
         end
     elseif filetype == "lua" then
         while (
             string.match(node:sexpr(), "for_statement") == nil and
-            string.match(node:sexpr(), "if_statement") == nil and
-            string.match(node:sexpr(), "while_statement") == nil and
-            string.match(node:sexpr(), "assignment_statement") == nil and
-            string.match(node:sexpr(), "function_definition") == nil and
-            string.match(node:sexpr(), "function_call") == nil and
-            string.match(node:sexpr(), "local_declaration") == nil
+                string.match(node:sexpr(), "if_statement") == nil and
+                string.match(node:sexpr(), "while_statement") == nil and
+                string.match(node:sexpr(), "assignment_statement") == nil and
+                string.match(node:sexpr(), "function_definition") == nil and
+                string.match(node:sexpr(), "function_call") == nil and
+                string.match(node:sexpr(), "local_declaration") == nil
             ) do
             node = node:parent()
         end
@@ -66,17 +60,18 @@ local term_open = function(filetype, config)
     end
     local buf = vim.api.nvim_create_buf(true, true)
     local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(win,buf)
+    vim.api.nvim_win_set_buf(win, buf)
     local choice = ''
-    if filetype=='scala' then
-        choice = M.repls["scala"]
-    elseif filetype=='python' then
-        choice = M.repls["python"]
-    elseif filetype=='lua' then
-        choice = M.repls["lua"]
+    if filetype == 'scala' then
+        choice = config.spawn_command.scala
+    elseif filetype == 'python' then
+        choice = config.spawn_command.python
+    elseif filetype == 'lua' then
+        choice = config.spawn_command.lua
     end
+    P(choice)
     local chan = vim.fn.termopen(choice, {
-        on_exit = function ()
+        on_exit = function()
             M.term.chanid = nil
             M.term.opened = 0
             M.term.winid = nil
@@ -93,7 +88,7 @@ local term_open = function(filetype, config)
 end
 
 -- CONSTRUCTING MESSAGE
-local construct_message_from_selection = function (start_row, start_col, end_row, end_col)
+local construct_message_from_selection = function(start_row, start_col, end_row, end_col)
     local bufnr = api.nvim_get_current_buf()
     if start_row ~= end_row then
         local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
@@ -116,11 +111,11 @@ local construct_message_from_buffer = function()
     return lines
 end
 
-local construct_message_from_node = function (filetype)
+local construct_message_from_node = function(filetype)
     local node = get_statement_definition(filetype)
     local bufnr = api.nvim_get_current_buf()
     local message = vim.treesitter.query.get_node_text(node, bufnr)
-    if filetype=="python" then
+    if filetype == "python" then
         local _, start_column, _, _ = node:range()
         while start_column ~= 0 do
             -- For empty blank lines
@@ -133,7 +128,7 @@ local construct_message_from_node = function (filetype)
     return message
 end
 
-local send_message = function(filetype, message,config)
+local send_message = function(filetype, message, config)
     if M.term.opened == 0 then
         term_open(filetype, config)
     end
@@ -141,7 +136,11 @@ local send_message = function(filetype, message,config)
     if filetype == "python" or filetype == "lua" then
         message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
     elseif filetype == "scala" then
-        message = api.nvim_replace_termcodes(":paste<cr>" .. message .. "<cr><C-d>", true, false, true)
+        if config.spawn_command.scala == "sbt console" then
+            message = api.nvim_replace_termcodes(":paste<cr>" .. message .. "<cr><C-d>", true, false, true)
+        else
+            message = api.nvim_replace_termcodes("{<cr>" .. message .. "<cr>}", true, false, true)
+        end
     end
     if config.execute_on_send then
         message = api.nvim_replace_termcodes(message .. "<cr>", true, false, true)
@@ -151,18 +150,18 @@ local send_message = function(filetype, message,config)
     end
 end
 
-M.send_statement_definition = function (config)
+M.send_statement_definition = function(config)
     local filetype = vim.bo.filetype
     local message = construct_message_from_node(filetype)
-    send_message(filetype, message,config)
+    send_message(filetype, message, config)
 end
 
-M.send_visual_to_repl = function (config)
+M.send_visual_to_repl = function(config)
     local filetype = vim.bo.filetype
     local start_row, start_col, end_row, end_col = visual_selection_range()
     local message = construct_message_from_selection(start_row, start_col, end_row, end_col)
     local concat_message = table.concat(message, "\n")
-    send_message(filetype, concat_message,config)
+    send_message(filetype, concat_message, config)
 end
 
 M.send_buffer_to_repl = function(config)
@@ -171,4 +170,5 @@ M.send_buffer_to_repl = function(config)
     local concat_message = table.concat(message, "\n")
     send_message(filetype, concat_message, config)
 end
+
 return M
