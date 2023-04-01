@@ -113,7 +113,7 @@ end
 local construct_message_from_node = function(filetype)
     local node = get_statement_definition(filetype)
     local bufnr = api.nvim_get_current_buf()
-    local message = vim.treesitter.query.get_node_text(node, bufnr)
+    local message = vim.treesitter.get_node_text(node, bufnr)
     if filetype == "python" then
         local _, start_column, _, _ = node:range()
         while start_column ~= 0 do
