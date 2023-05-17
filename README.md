@@ -26,15 +26,16 @@ Somewhere in your init.lua/init.vim you should place
 
 ### Keymaps
 
-In normal mode, default keymapping for sending a treesitter object is set to
-`<leader>n`. The command will send the smallest semantic unit at the cursor. If the
+There are no keymaps by default. As an example, one could create a keymap in normal mode
+on `<leader>n` that executes `SendPyObject` to send a treesitter object.
+The command will send the smallest semantic unit at the cursor. If the
 cursor is somewhere within an expression, the expression will be sent, even if the
 expression is within a function. If the cursor is on the function definition, the entire
 function will be sent. If it is on a class definition, the entire class will be sent. 
 
-In visual mode, `<leader>n` sends visual selection to repl. 
+With a similar keymap in visual mode, `<leader>n` sends visual selection to repl.
 
-Default keymapping for sending the entire buffer is `<leader>nr`. 
+A keymapping for sending the entire buffer could be `<leader>nr`.
 
 ```
 vim.api.nvim_set_keymap('n', [your keymap], ":SendPyObject<CR>", {noremap=true, silent=true}) 
@@ -46,6 +47,10 @@ vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>",{noremap
 
 ``` 
 vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true,silent=true}) 
+```
+
+```
+vim.api.nvim_set_keymap('n', [your keymap], ":ToggleExecuteOnSend<CR>", {noremap=true,silent=true})
 ```
 
 ### Options 
