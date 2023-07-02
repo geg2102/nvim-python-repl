@@ -16,9 +16,24 @@ selection from visual mode.
 
 ### Usage 
 
-Can be installed with any plugin manager. For example, in packer you can use 
+Can be installed with any plugin manager. For example, in lazy you can use 
 
-``` use "geg2102/nvim-python-repl" ```
+``` 
+...
+    {
+    "geg2102/nvim-python-repl",
+    dependencies = "nvim-treesitter",
+    ft = {"python", "lua", "scala"}, 
+    config = function()
+        require("nvim-python-repl").setup({
+            execute_on_send = false,
+            vsplit = false,
+        })
+    end
+    }
+...
+
+```
 
 Somewhere in your init.lua/init.vim you should place 
 
@@ -26,26 +41,19 @@ Somewhere in your init.lua/init.vim you should place
 
 ### Keymaps
 
-In normal mode, default keymapping for sending a treesitter object is set to
-`<leader>n`. The command will send the smallest semantic unit at the cursor. If the
-cursor is somewhere within an expression, the expression will be sent, even if the
-expression is within a function. If the cursor is on the function definition, the entire
-function will be sent. If it is on a class definition, the entire class will be sent. 
 
-In visual mode, `<leader>n` sends visual selection to repl. 
+There are a few keybindings that the user needs to set up. 
 
-Default keymapping for sending the entire buffer is `<leader>nr`. 
+```[lua]
+vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').send_statement_definition() end, { desc = "Send semantic unit to REPL"})
 
-```
-vim.api.nvim_set_keymap('n', [your keymap], ":SendPyObject<CR>", {noremap=true, silent=true}) 
-``` 
+vim.keymap.set("v", [your keymap], function() require('nvim-python-repl').send_visual_to_repl() end, { desc = "Send visual selection to REPL"})
 
-``` 
-vim.api.nvim_set_keymap('v', [your keymap], ":<C-U>SendPySelection<CR>",{noremap=true, silent=true}) 
-```
+vim.keymap.set("n", [your keyamp], function() require('nvim-python-repl').send_buffer_to_repl() end, { desc = "Send entire buffer to REPL"})
 
-``` 
-vim.api.nvim_set_keymap('n', [your keymap], ":SendPyBuffer<CR>", {noremap=true,silent=true}) 
+vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').toggle_execute() end, { desc = "Automatically execute command in REPL after sent"})
+
+vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').toggle_vertical() end, { desc = "Create REPL in vertical or horizontal split"})
 ```
 
 ### Options 
