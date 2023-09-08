@@ -25,6 +25,7 @@ function M.send_statement_definition()
 end
 
 function M.send_visual_to_repl()
+    vim.cmd('execute "normal \\<ESC>"')
     repl.send_visual_to_repl(M)
 end
 
