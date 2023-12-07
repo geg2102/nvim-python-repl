@@ -5,6 +5,7 @@ local defaults = {
         python = "ipython",
         scala = "sbt console",
         lua = "ilua",
+        r = "radian",
     }
 }
 
