@@ -1,7 +1,5 @@
 # nvim-python-repl 
 
-[![asciicast](https://asciinema.org/a/460861.svg)](https://asciinema.org/a/460861)
-
 A simple plugin that leverages treesitter to send expressions, statements,
 function definitions and class definitions to a REPL. 
 
