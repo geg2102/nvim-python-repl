@@ -45,4 +45,14 @@ function M.toggle_vertical()
     print("vsplit=" .. tostring(not original))
 end
 
+function M.toggle_prompt()
+    local original = config.defaults["prompt_spawn"]
+    config.defaults["prompt_spawn"] = not original
+    print("Spawn prompt=" .. tostring(not original))
+end
+
+function M.open_repl()
+    repl.open_repl(M)
+end
+
 return M
