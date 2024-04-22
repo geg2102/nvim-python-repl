@@ -62,12 +62,16 @@ local term_open = function(filetype, config)
     local win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(win, buf)
     local choice = ''
-    if filetype == 'scala' then
-        choice = config.spawn_command.scala
-    elseif filetype == 'python' then
-        choice = config.spawn_command.python
-    elseif filetype == 'lua' then
-        choice = config.spawn_command.lua
+    if config.prompt_spawn then
+        choice = vim.fn.input("REPL spawn command: ")
+    else
+        if filetype == 'scala' then
+            choice = config.spawn_command.scala
+        elseif filetype == 'python' then
+            choice = config.spawn_command.python
+        elseif filetype == 'lua' then
+            choice = config.spawn_command.lua
+        end
     end
     local chan = vim.fn.termopen(choice, {
         on_exit = function()
@@ -168,6 +172,11 @@ M.send_buffer_to_repl = function(config)
     local message = construct_message_from_buffer()
     local concat_message = table.concat(message, "\n")
     send_message(filetype, concat_message, config)
+end
+
+M.open_repl = function(config)
+    local filetype = vim.bo.filetype
+    term_open(filetype, config)
 end
 
 return M

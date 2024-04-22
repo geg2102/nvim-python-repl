@@ -21,6 +21,10 @@ send_buffer_to_repl()
 
     Function to send entire buffer to REPL (will open new REPL if none open). 
 
+                                                                *open_repl()*
+open_repl()
+    Function that opens the REPL according to settings.
+
                                                             *toggle_execute()*
 toggle_execute()
 
@@ -32,6 +36,11 @@ toggle_vertical()
 
     Function that toggles whether the REPL should open on vertical or
     horizontal split. 
+
+                                                            *toggle_prompt()*
+toggle_prompt()
+    Function that toggles whether neovim will prompt for the command that spawns
+    the REPL rather than use the deafult one.
 
 ================================================================================
 vim:tw=78:ts=8:ft=help:norl:

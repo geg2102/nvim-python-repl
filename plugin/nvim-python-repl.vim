@@ -11,7 +11,8 @@ command! SendPySelection           lua require("nvim-python-repl").send_visual_t
 command! SendPyBuffer              lua require("nvim-python-repl").send_buffer_to_repl()
 command! ToggleExecuteOnSend       lua require("nvim-python-repl").toggle_execute()
 command! ReplToggleVertical        lua require("nvim-python-repl").toggle_vertical()
-
+command! ReplTogglePrompt          lua require("nvim-python-repl").toggle_prompt()
+command! ReplOpen                  lua require("nvim-python-repl").open_repl()
 " Remove default mappings
 " nnoremap <silent> <leader>n :SendPyObject<CR>
 " nnoremap <silent> <leader>e :ToggleExecuteOnSend<CR>

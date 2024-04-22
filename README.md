@@ -53,6 +53,8 @@ vim.keymap.set("n", [your keyamp], function() require('nvim-python-repl').send_b
 vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').toggle_execute() end, { desc = "Automatically execute command in REPL after sent"})
 
 vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').toggle_vertical() end, { desc = "Create REPL in vertical or horizontal split"})
+
+vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').open_repl() end, { desc = "Opens the REPL in a window split"})
 ```
 
 ### Options 
@@ -63,7 +65,7 @@ by default can be changed with `:ReplToggleVertical` or `:lua
 require("nvim-python-repl").toggle_vertical()`. 
 
 
-There is an also an option to specify which spawn command you want to use for a given repl (passed as table). 
+There is an also an option to specify which spawn command you want to use for a given repl (passed as table),as well as an option to prompt from the command that starts the REPL.
 
 Here is the default setup: 
 
@@ -71,6 +73,7 @@ Here is the default setup:
 require("nvim-python-repl").setup({
     execute_on_send=false, 
     vsplit=false,
+    prompt_spawn=false,
     spawn_command={
         python="ipython", 
         scala="sbt console",
