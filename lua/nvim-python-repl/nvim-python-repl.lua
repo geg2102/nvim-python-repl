@@ -28,7 +28,7 @@ local get_statement_definition = function(filetype)
     end
     if filetype == "python" or filetype == "scala" then
         while (
-            string.match(node:sexpr(), "import") == nil and
+                string.match(node:sexpr(), "import") == nil and
                 string.match(node:sexpr(), "statement") == nil and
                 string.match(node:sexpr(), "definition") == nil and
                 string.match(node:sexpr(), "call_expression") == nil) do
@@ -36,7 +36,7 @@ local get_statement_definition = function(filetype)
         end
     elseif filetype == "lua" then
         while (
-            string.match(node:sexpr(), "for_statement") == nil and
+                string.match(node:sexpr(), "for_statement") == nil and
                 string.match(node:sexpr(), "if_statement") == nil and
                 string.match(node:sexpr(), "while_statement") == nil and
                 string.match(node:sexpr(), "assignment_statement") == nil and
@@ -119,13 +119,20 @@ local construct_message_from_node = function(filetype)
     local bufnr = api.nvim_get_current_buf()
     local message = vim.treesitter.get_node_text(node, bufnr)
     if filetype == "python" then
-        local _, start_column, _, _ = node:range()
-        while start_column ~= 0 do
-            -- For empty blank lines
-            message = string.gsub(message, "\n\n+", "\n")
-            -- For nested indents in classes/functions
-            message = string.gsub(message, "\n%s%s%s%s", "\n")
-            start_column = start_column - 4
+        -- For Python, we need to preserve the original indentation
+        local start_row, start_column, end_row, _ = node:range()
+        if vim.fn.has('win32') == 1 then
+            local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
+            message = table.concat(lines, api.nvim_replace_termcodes("<cr>", true, false, true))
+        else
+            -- For Linux, remove superfluous indentation so nested code is not indented
+            while start_column ~= 0 do
+                -- For empty blank lines
+                message = string.gsub(message, "\n\n+", "\n")
+                -- For nested indents in classes/functions
+                message = string.gsub(message, "\n%s%s%s%s", "\n")
+                start_column = start_column - 4
+            end
         end
     end
     return message
@@ -137,19 +144,29 @@ local send_message = function(filetype, message, config)
     end
     vim.wait(600)
     if filetype == "python" or filetype == "lua" then
-        message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
+        if vim.fn.has('win32') == 1 then
+            message = message .. "\r\n"
+        else
+            message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
+        end
+        api.nvim_chan_send(M.term.chanid, message)
     elseif filetype == "scala" then
         if config.spawn_command.scala == "sbt console" then
             message = api.nvim_replace_termcodes(":paste<cr>" .. message .. "<cr><C-d>", true, false, true)
         else
             message = api.nvim_replace_termcodes("{<cr>" .. message .. "<cr>}", true, false, true)
         end
+        api.nvim_chan_send(M.term.chanid, message)
     end
     if config.execute_on_send then
-        message = api.nvim_replace_termcodes(message .. "<cr>", true, false, true)
-    end
-    if M.term.chanid ~= nil then
-        api.nvim_chan_send(M.term.chanid, message)
+        vim.wait(500)
+        if vim.fn.has('win32') == 1 then
+            vim.wait(200)
+            -- For Windows, simulate pressing Enter
+            api.nvim_chan_send(M.term.chanid, api.nvim_replace_termcodes("<C-m>", true, false, true))
+        else
+            api.nvim_chan_send(M.term.chanid, "\r")
+        end
     end
 end
 
