@@ -20,6 +20,10 @@ function M.setup(options)
     end
 end
 
+function M.send_current_cell_to_repl()
+    repl.send_current_cell_to_repl(M)
+end
+
 function M.send_statement_definition()
     repl.send_statement_definition(M)
 end

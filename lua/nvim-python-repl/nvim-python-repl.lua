@@ -170,6 +170,48 @@ local send_message = function(filetype, message, config)
     end
 end
 
+-- Function to identify cell boundaries
+local get_current_cell_range = function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cursor_row = vim.api.nvim_win_get_cursor(0)[1] - 1
+
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local start_row = 0
+    local end_row = #lines - 1
+
+    for i = cursor_row, 0, -1 do
+        if string.match(lines[i + 1], "^# %%%%") then
+            start_row = i + 1
+            break
+        end
+    end
+
+    for i = cursor_row + 1, #lines - 1 do
+        if string.match(lines[i + 1], "^# %%%%") then
+            end_row = i - 1
+            break
+        end
+    end
+
+    return start_row, end_row
+end
+
+-- Function to extract cell content
+local construct_message_from_cell = function()
+    local start_row, end_row = get_current_cell_range()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
+    return lines
+end
+
+-- Function to send current cell to REPL
+M.send_current_cell_to_repl = function(config)
+    local filetype = vim.bo.filetype
+    local message_lines = construct_message_from_cell()
+    local message = table.concat(message_lines, "\n")
+    send_message(filetype, message, config)
+end
+
 M.send_statement_definition = function(config)
     local filetype = vim.bo.filetype
     local message = construct_message_from_node(filetype)

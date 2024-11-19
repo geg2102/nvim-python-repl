@@ -57,6 +57,13 @@ vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').toggle
 vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').open_repl() end, { desc = "Opens the REPL in a window split"})
 ```
 
+### Bonus 
+
+- This plugin also works with [nvim-jupyter-client](https://github.com/geg2102/nvim-jupyter-client). There is a function to send a cell under cursor to repl.
+```[lua]
+vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').send_current_cell_to_repl() end, { desc = "Sends the cell under cursor to repl"})
+```
+
 ### Options 
 There are a few options. First, whether to execute the given expression on send
 and second, whether to send to a vertical split. By default these are set to true. Toggle on send
