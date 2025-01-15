@@ -13,6 +13,10 @@ is opened from the directory containing `build.sbt`).
 In addition to sending treesitter objects, there is also support for sending a
 selection from visual mode. 
 
+### Requirements
+#### tree-sitter parser
+You will need to install [the tree-sitter parser that corresponds to your desired programming language](https://github.com/tree-sitter). For example, for Python, you will need to execute `:TSInstall python` before `nvim-python-repl` will function properly.
+
 ### Usage 
 
 Can be installed with any plugin manager. For example, in lazy you can use 
