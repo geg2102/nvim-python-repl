@@ -142,7 +142,7 @@ local send_message = function(filetype, message, config)
     if M.term.opened == 0 then
         term_open(filetype, config)
     end
-    vim.wait(600)
+    vim.wait(60)
     if filetype == "python" or filetype == "lua" then
         if vim.fn.has('win32') == 1 then
             message = message .. "\r\n"
