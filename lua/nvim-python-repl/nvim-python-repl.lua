@@ -144,11 +144,11 @@ local send_message = function(filetype, message, config)
     end
     vim.wait(60)
     if filetype == "python" or filetype == "lua" then
-        if vim.fn.has('win32') == 1 then
-            message = message .. "\r\n"
-        else
-            message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
-        end
+        -- if vim.fn.has('win32') == 1 then
+        --     message = message .. "\r\n"
+        -- else
+        message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
+        -- end
         api.nvim_chan_send(M.term.chanid, message)
     elseif filetype == "scala" then
         if config.spawn_command.scala == "sbt console" then
@@ -159,9 +159,9 @@ local send_message = function(filetype, message, config)
         api.nvim_chan_send(M.term.chanid, message)
     end
     if config.execute_on_send then
-        vim.wait(500)
+        vim.wait(50)
         if vim.fn.has('win32') == 1 then
-            vim.wait(200)
+            vim.wait(20)
             -- For Windows, simulate pressing Enter
             api.nvim_chan_send(M.term.chanid, api.nvim_replace_termcodes("<C-m>", true, false, true))
         else
