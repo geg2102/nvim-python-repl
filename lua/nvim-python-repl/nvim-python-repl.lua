@@ -85,7 +85,7 @@ local term_open = function(filetype, config)
     vim.bo.filetype = 'term'
 
     -- Block until terminal is ready
-    local timeout = 3000 -- 3 seconds timeout
+    local timeout = 5000 -- 5 seconds timeout
     local interval = 100 -- Check every 100ms
     local success = vim.wait(timeout, function()
         -- Check if terminal buffer has content
