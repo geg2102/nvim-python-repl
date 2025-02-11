@@ -121,19 +121,19 @@ local construct_message_from_node = function(filetype)
     if filetype == "python" then
         -- For Python, we need to preserve the original indentation
         local start_row, start_column, end_row, _ = node:range()
-        if vim.fn.has('win32') == 1 then
-            local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
-            message = table.concat(lines, api.nvim_replace_termcodes("<cr>", true, false, true))
-        else
-            -- For Linux, remove superfluous indentation so nested code is not indented
-            while start_column ~= 0 do
-                -- For empty blank lines
-                message = string.gsub(message, "\n\n+", "\n")
-                -- For nested indents in classes/functions
-                message = string.gsub(message, "\n%s%s%s%s", "\n")
-                start_column = start_column - 4
-            end
+        -- if vim.fn.has('win32') == 1 then
+        --     local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
+        --     message = table.concat(lines, api.nvim_replace_termcodes("<cr>", true, false, true))
+        -- else
+        -- For Linux, remove superfluous indentation so nested code is not indented
+        while start_column ~= 0 do
+            -- For empty blank lines
+            message = string.gsub(message, "\n\n+", "\n")
+            -- For nested indents in classes/functions
+            message = string.gsub(message, "\n%s%s%s%s", "\n")
+            start_column = start_column - 4
         end
+        -- end
     end
     return message
 end
