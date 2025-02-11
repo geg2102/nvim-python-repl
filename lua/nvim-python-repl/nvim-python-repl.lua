@@ -83,6 +83,23 @@ local term_open = function(filetype, config)
     })
     M.term.chanid = chan
     vim.bo.filetype = 'term'
+
+    -- Block until terminal is ready
+    local timeout = 3000 -- 3 seconds timeout
+    local interval = 100 -- Check every 100ms
+    local success = vim.wait(timeout, function()
+        -- Check if terminal buffer has content
+        local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+        return #lines > 0 and lines[1] ~= ""
+    end, interval)
+
+    if not success then
+        vim.notify("Terminal initialization timed out", vim.log.levels.WARN)
+    end
+
+    -- Additional wait for safety
+    vim.wait(500)
+
     M.term.opened = 1
     M.term.winid = win
     M.term.bufid = buf
