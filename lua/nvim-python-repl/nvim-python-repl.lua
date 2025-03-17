@@ -98,7 +98,7 @@ local term_open = function(filetype, config)
     end
 
     -- Additional wait for safety
-    vim.wait(500)
+    vim.wait(20)
 
     M.term.opened = 1
     M.term.winid = win
@@ -138,10 +138,10 @@ local construct_message_from_node = function(filetype)
     if filetype == "python" then
         -- For Python, we need to preserve the original indentation
         local start_row, start_column, end_row, _ = node:range()
-        -- if vim.fn.has('win32') == 1 then
-        --     local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
-        --     message = table.concat(lines, api.nvim_replace_termcodes("<cr>", true, false, true))
-        -- else
+        if vim.fn.has('win32') == 1 then
+            local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
+            message = table.concat(lines, api.nvim_replace_termcodes("<C-m>", true, false, true))
+        end
         -- For Linux, remove superfluous indentation so nested code is not indented
         while start_column ~= 0 do
             -- For empty blank lines
@@ -159,12 +159,14 @@ local send_message = function(filetype, message, config)
     if M.term.opened == 0 then
         term_open(filetype, config)
     end
-    vim.wait(60)
+    local line_count = vim.api.nvim_buf_line_count(M.term.bufid)
+    vim.api.nvim_win_set_cursor(M.term.winid, { line_count, 0 })
+    vim.wait(50)
     if filetype == "python" or filetype == "lua" then
         -- if vim.fn.has('win32') == 1 then
         --     message = message .. "\r\n"
         -- else
-        message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<cr><esc>[201~", true, false, true)
+        message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
         -- end
         api.nvim_chan_send(M.term.chanid, message)
     elseif filetype == "scala" then
@@ -176,13 +178,13 @@ local send_message = function(filetype, message, config)
         api.nvim_chan_send(M.term.chanid, message)
     end
     if config.execute_on_send then
-        vim.wait(50)
+        vim.wait(20)
         if vim.fn.has('win32') == 1 then
             vim.wait(20)
             -- For Windows, simulate pressing Enter
-            api.nvim_chan_send(M.term.chanid, api.nvim_replace_termcodes("<C-m>", true, false, true))
+            api.nvim_chan_send(M.term.chanid, api.nvim_replace_termcodes("<C-m><C-m>", true, false, true))
         else
-            api.nvim_chan_send(M.term.chanid, "\r")
+            api.nvim_chan_send(M.term.chanid, "\r\r")
         end
     end
 end
@@ -239,14 +241,24 @@ M.send_visual_to_repl = function(config)
     local filetype = vim.bo.filetype
     local start_row, start_col, end_row, end_col = visual_selection_range()
     local message = construct_message_from_selection(start_row, start_col, end_row, end_col)
-    local concat_message = table.concat(message, "\n")
+    local concat_message = ""
+    if vim.fn.has('win32') == 1 then
+        concat_message = table.concat(message, "<C-m>")
+    else
+        concat_message = table.concat(message, "\n")
+    end
     send_message(filetype, concat_message, config)
 end
 
 M.send_buffer_to_repl = function(config)
     local filetype = vim.bo.filetype
     local message = construct_message_from_buffer()
-    local concat_message = table.concat(message, "\n")
+    local concat_message = ""
+    if vim.fn.has('win32') == 1 then
+        concat_message = table.concat(message, "<C-m>")
+    else
+        concat_message = table.concat(message, "\n")
+    end
     send_message(filetype, concat_message, config)
 end
 
