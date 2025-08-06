@@ -107,53 +107,125 @@ local term_open = function(filetype, config)
     api.nvim_set_current_win(orig_win)
 end
 
+local function utf8_safe_sub(line, start_char, end_char)
+    local total_chars = vim.fn.strchars(line)
+    -- If end_char is past the end, clamp it
+    if end_char > total_chars then
+        end_char = total_chars
+    end
+    return vim.fn.strcharpart(line, start_char, end_char - start_char)
+end
+
+local function sanitize_utf8_lines(lines)
+    local sanitized = {}
+    for _, line in ipairs(lines) do
+        -- Remove invalid UTF-8 characters (including lone surrogates)
+        -- This regex removes any byte sequence that can't be interpreted as valid UTF-8
+        -- It replaces them with an empty string
+        local ok, clean_line = pcall(vim.fn.strtrans, line)
+        if not ok then
+            clean_line = "" -- fallback if strtrans fails
+        end
+        table.insert(sanitized, clean_line)
+    end
+    return sanitized
+end
+
+local function get_minimum_indentation(lines)
+    local min_indent = nil
+    for _, line in ipairs(lines) do
+        local indent = line:match("^(%s*)%S")
+        if indent then
+            local indent_len = vim.fn.strchars(indent)
+            if min_indent == nil or indent_len < min_indent then
+                min_indent = indent_len
+            end
+        end
+    end
+    return min_indent or 0
+end
+
+local function dedent_lines(lines, indent_chars)
+    local dedented = {}
+    for _, line in ipairs(lines) do
+        if line:match("^%s*$") then
+            table.insert(dedented, "")
+        else
+            local total_chars = vim.fn.strchars(line)
+            local dedented_line = vim.fn.strcharpart(line, indent_chars, total_chars - indent_chars)
+            table.insert(dedented, dedented_line)
+        end
+    end
+    return dedented
+end
+
 -- CONSTRUCTING MESSAGE
 local construct_message_from_selection = function(start_row, start_col, end_row, end_col)
     local bufnr = api.nvim_get_current_buf()
     if start_row ~= end_row then
         local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
-        lines[1] = string.sub(lines[1], start_col + 1)
-        -- end_row might be just after the last line. In this case the last line is not truncated.
-        if #lines == end_row - start_row then
-            lines[#lines] = string.sub(lines[#lines], 1, end_col)
+        lines[1] = utf8_safe_sub(lines[1], start_col, vim.fn.strchars(lines[1]))
+        -- Only truncate the final line if the selection ends before the end of the line
+        if #lines == end_row - start_row + 1 then
+            lines[#lines] = utf8_safe_sub(lines[#lines], 0, end_col)
         end
         return lines
     else
         local line = api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1]
-        -- If line is nil then the line is empty
-        return line and { string.sub(line, start_col + 1, end_col) } or {}
+        return line and { utf8_safe_sub(line, start_col, end_col) } or {}
     end
 end
 
 local construct_message_from_buffer = function()
     local bufnr = api.nvim_get_current_buf()
     local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    lines = sanitize_utf8_lines(lines)
     return lines
 end
 
 local construct_message_from_node = function(filetype)
     local node = get_statement_definition(filetype)
     local bufnr = api.nvim_get_current_buf()
-    local message = vim.treesitter.get_node_text(node, bufnr)
+    local start_row, _, end_row, _ = node:range()
+    local lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
+
+    -- Handle Python indentation issues
     if filetype == "python" then
-        -- For Python, we need to preserve the original indentation
-        local start_row, start_column, end_row, _ = node:range()
         if vim.fn.has('win32') == 1 then
-            local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
-            message = table.concat(lines, api.nvim_replace_termcodes("<C-m>", true, false, true))
+            return table.concat(lines, api.nvim_replace_termcodes("<C-m>", true, false, true))
+        else
+            local min_indent = get_minimum_indentation(lines)
+            local dedented = dedent_lines(lines, min_indent)
+            return table.concat(dedented, "\n")
         end
-        -- For Linux, remove superfluous indentation so nested code is not indented
-        while start_column ~= 0 do
-            -- For empty blank lines
-            message = string.gsub(message, "\n\n+", "\n")
-            -- For nested indents in classes/functions
-            message = string.gsub(message, "\n%s%s%s%s", "\n")
-            start_column = start_column - 4
-        end
-        -- end
+    else
+        return vim.treesitter.get_node_text(node, bufnr)
     end
-    return message
 end
+
+-- local construct_message_from_node = function(filetype)
+--     local node = get_statement_definition(filetype)
+--     local bufnr = api.nvim_get_current_buf()
+--     local message = vim.treesitter.get_node_text(node, bufnr)
+--     if filetype == "python" then
+--         -- For Python, we need to preserve the original indentation
+--         local start_row, start_column, end_row, _ = node:range()
+--         if vim.fn.has('win32') == 1 then
+--             local lines = api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
+--             message = table.concat(lines, api.nvim_replace_termcodes("<C-m>", true, false, true))
+--         end
+--         -- For Linux, remove superfluous indentation so nested code is not indented
+--         while start_column ~= 0 do
+--             -- For empty blank lines
+--             message = string.gsub(message, "\n\n+", "\n")
+--             -- For nested indents in classes/functions
+--             message = string.gsub(message, "\n%s%s%s%s", "\n")
+--             start_column = start_column - 4
+--         end
+--         -- end
+--     end
+--     return message
+-- end
 
 local send_message = function(filetype, message, config)
     if M.term.opened == 0 then
@@ -162,30 +234,29 @@ local send_message = function(filetype, message, config)
     local line_count = vim.api.nvim_buf_line_count(M.term.bufid)
     vim.api.nvim_win_set_cursor(M.term.winid, { line_count, 0 })
     vim.wait(50)
+    local esc = "\27"
     if filetype == "python" or filetype == "lua" then
         -- if vim.fn.has('win32') == 1 then
         --     message = message .. "\r\n"
         -- else
-        message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
+        message = esc .. "[200~" .. message .. esc .. "[201~"
+        -- --
+        -- message = api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
         -- end
         api.nvim_chan_send(M.term.chanid, message)
     elseif filetype == "scala" then
         if config.spawn_command.scala == "sbt console" then
-            message = api.nvim_replace_termcodes(":paste<cr>" .. message .. "<cr><C-d>", true, false, true)
+            -- Use :paste mode with explicit newlines
+            message = ":paste\n" .. message .. "\n" .. string.char(4) -- Ctrl-D (End of Transmission)
         else
-            message = api.nvim_replace_termcodes("{<cr>" .. message .. "<cr>}", true, false, true)
+            -- Wrap in curly braces with literal newlines
+            message = "{\n" .. message .. "\n}"
         end
         api.nvim_chan_send(M.term.chanid, message)
     end
     if config.execute_on_send then
         vim.wait(20)
-        if vim.fn.has('win32') == 1 then
-            vim.wait(20)
-            -- For Windows, simulate pressing Enter
-            api.nvim_chan_send(M.term.chanid, api.nvim_replace_termcodes("<C-m><C-m>", true, false, true))
-        else
-            api.nvim_chan_send(M.term.chanid, "\r\r")
-        end
+        api.nvim_chan_send(M.term.chanid, "\r\r")
     end
 end
 
