@@ -9,6 +9,7 @@ endif
 command! SendPyObject              lua require("nvim-python-repl").send_statement_definition()
 command! SendPySelection           lua require("nvim-python-repl").send_visual_to_repl()
 command! SendPyBuffer              lua require("nvim-python-repl").send_buffer_to_repl()
+command! SendMarkdownCode          lua require("nvim-python-repl").send_markdown_codeblock_to_repl()
 command! ToggleExecuteOnSend       lua require("nvim-python-repl").toggle_execute()
 command! ReplToggleVertical        lua require("nvim-python-repl").toggle_vertical()
 command! ReplTogglePrompt          lua require("nvim-python-repl").toggle_prompt()

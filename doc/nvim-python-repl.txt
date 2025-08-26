@@ -21,6 +21,11 @@ send_buffer_to_repl()
 
     Function to send entire buffer to REPL (will open new REPL if none open). 
 
+send_markdown_codeblock_to_repl()
+
+    Function to send markdown code block to REPL (will open new REPL if none
+    open).
+
                                                                 *open_repl()*
 open_repl()
     Function that opens the REPL according to settings.

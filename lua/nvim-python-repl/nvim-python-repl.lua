@@ -202,6 +202,62 @@ local construct_message_from_node = function(filetype)
     end
 end
 
+local function get_current_markdown_codeblock()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(0))  -- 0-indexed
+  cursor_row = cursor_row + 1  -- Convert to 1-indexed
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  -- Pattern for code fence: ^\s*````\s*(\w+)? -> matches ``` or ```python
+  local fence_pattern = "^%s*```%s*()"
+
+  -- Step 1: Scan upward to find the opening fence
+  local start_line = nil
+  local end_line = nil
+  local language = "plaintext"
+
+  -- Go up from cursor to find the start fence
+  for i = cursor_row - 1, 1, -1 do
+    if i <= line_count and lines[i - 1]:match(fence_pattern) then
+      language = lines[i - 1]:match("^%s*```%s*(%w+)") or "plaintext"
+      start_line = i
+      break
+    end
+    if i == 1 or lines[i - 1]:match("^%s*```") then
+      -- Hit another fence or start — not in a valid block
+      return nil
+    end
+  end
+
+  if not start_line then return nil end  -- No opening fence found
+
+  -- Step 2: Scan downward to find the closing fence
+  for i = start_line + 1, line_count do
+    if lines[i - 1]:match("^%s*```%s*$") then
+      end_line = i - 1  -- Exclude closing fence
+      break
+    end
+  end
+
+  if not end_line then end_line = line_count end  -- In case no closing fence
+
+  -- Step 3: Extract content between fences
+  local content_lines = {}
+  for i = start_line, end_line - 1 do
+    table.insert(content_lines, lines[i])
+  end
+
+  local content = table.concat(content_lines, "\n")
+
+  return {
+    language = language,
+    content = content,
+    range = { start_line - 1, end_line }  -- 0-indexed for API use
+  }
+end
+
 -- local construct_message_from_node = function(filetype)
 --     local node = get_statement_definition(filetype)
 --     local bufnr = api.nvim_get_current_buf()
@@ -330,6 +386,29 @@ M.send_buffer_to_repl = function(config)
         concat_message = table.concat(message, "\n")
     end
     send_message(filetype, concat_message, config)
+end
+
+M.send_markdown_codeblock_to_repl = function(config)
+    local filetype = vim.bo.filetype
+    if filetype ~= "markdown" then
+        vim.notify("Not a markdown file", vim.log.levels.WARN)
+        return
+    end
+
+    local codeblock = get_current_markdown_codeblock()
+    if not codeblock then
+        vim.notify("No fenced code block found", vim.log.levels.WARN)
+        return
+    end
+
+    local message = vim.split(codeblock.content, '\n', { trimempty = false })
+    local concat_message = ""
+    if vim.fn.has('win32') == 1 then
+        concat_message = table.concat(message, "<C-m>")
+    else
+        concat_message = table.concat(message, "\n")
+    end
+    send_message(codeblock.language, concat_message, config)
 end
 
 M.open_repl = function(config)
