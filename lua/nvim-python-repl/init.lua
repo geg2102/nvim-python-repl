@@ -37,6 +37,10 @@ function M.send_buffer_to_repl()
     repl.send_buffer_to_repl(M)
 end
 
+function M.send_markdown_codeblock_to_repl()
+    repl.send_markdown_codeblock_to_repl(M)
+end
+
 function M.toggle_execute()
     local original = config.defaults["execute_on_send"]
     config.defaults["execute_on_send"] = not original
