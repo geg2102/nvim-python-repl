@@ -25,7 +25,7 @@ Can be installed with any plugin manager. For example, in lazy you can use
 ...
     {
     "geg2102/nvim-python-repl",
-    dependencies = "nvim-treesitter",
+    -- dependencies = "nvim-treesitter", Not necessary 
     ft = {"python", "lua", "scala"}, 
     config = function()
         require("nvim-python-repl").setup({

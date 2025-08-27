@@ -1,4 +1,3 @@
-local ts_utils = require("nvim-treesitter.ts_utils")
 local api = vim.api
 
 M = {}
@@ -22,7 +21,7 @@ local visual_selection_range = function()
 end
 
 local get_statement_definition = function(filetype)
-    local node = ts_utils.get_node_at_cursor()
+    local node = vim.treesitter.get_node()
     if (node:named() == false) then
         error("Node not recognized. Check to ensure treesitter parser is installed.")
     end
