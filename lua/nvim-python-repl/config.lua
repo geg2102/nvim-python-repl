@@ -6,6 +6,7 @@ local defaults = {
         python = "ipython",
         scala = "sbt console",
         lua = "ilua",
+        bash = "bash",
     }
 }
 
