@@ -70,6 +70,8 @@ local term_open = function(filetype, config)
             choice = config.spawn_command.python
         elseif filetype == 'lua' then
             choice = config.spawn_command.lua
+        elseif filetype == 'bash' then
+            choice = config.spawn_command.bash
         end
     end
     local chan = vim.fn.termopen(choice, {
@@ -306,6 +308,12 @@ local send_message = function(filetype, message, config)
         else
             -- Wrap in curly braces with literal newlines
             message = "{\n" .. message .. "\n}"
+        end
+        api.nvim_chan_send(M.term.chanid, message)
+    elseif filetype == "bash" then
+        if config.spawn_command.bash == "bash" then
+            -- Use :paste mode with explicit newlines
+            message = ":paste\n" .. message .. "\n"
         end
         api.nvim_chan_send(M.term.chanid, message)
     end
