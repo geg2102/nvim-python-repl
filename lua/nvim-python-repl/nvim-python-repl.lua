@@ -70,8 +70,10 @@ local term_open = function(filetype, config)
             choice = config.spawn_command.python
         elseif filetype == 'lua' then
             choice = config.spawn_command.lua
-        elseif filetype == 'bash' then
+        elseif filetype == 'bash' or filetype == 'sh' then
             choice = config.spawn_command.bash
+        else
+            choice = vim.fn.input("REPL spawn command: ")
         end
     end
     local chan = vim.fn.termopen(choice, {
@@ -310,11 +312,10 @@ local send_message = function(filetype, message, config)
             message = "{\n" .. message .. "\n}"
         end
         api.nvim_chan_send(M.term.chanid, message)
-    elseif filetype == "bash" then
-        if config.spawn_command.bash == "bash" then
-            -- Use :paste mode with explicit newlines
-            message = ":paste\n" .. message .. "\n"
-        end
+    elseif filetype == "bash" or filetype == "sh" then
+        api.nvim_chan_send(M.term.chanid, message)
+    else
+        -- for unknown interpreters, just send the code. may work, may not
         api.nvim_chan_send(M.term.chanid, message)
     end
     if config.execute_on_send then
