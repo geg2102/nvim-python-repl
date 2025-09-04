@@ -52,14 +52,18 @@ end
 local term_open = function(filetype, config)
     local orig_win = vim.api.nvim_get_current_win()
     if M.term.chanid ~= nil then return end
-    if config.vsplit then
-        api.nvim_command('vsplit')
-    else
-        api.nvim_command('split')
-    end
     local buf = vim.api.nvim_create_buf(true, true)
-    local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(win, buf)
+    local split_dir = 'left'
+    if config.split_dir then
+        split_dir = config.split_dir
+    end
+    if config.vsplit then
+        split_dir = 'above'
+    end
+    local win = vim.api.nvim_open_win(buf, true, {
+        split = split_dir,
+        win = orig_win
+    })
     local choice = ''
     if config.prompt_spawn then
         choice = vim.fn.input("REPL spawn command: ")

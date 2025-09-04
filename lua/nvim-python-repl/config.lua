@@ -1,6 +1,7 @@
 local defaults = {
     execute_on_send = true,
     vsplit = true,
+    split_dir = 'above', -- available values: left, right, above, below
     prompt_spawn = false,
     spawn_command = {
         python = "ipython",
