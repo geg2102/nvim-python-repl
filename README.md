@@ -58,6 +58,8 @@ vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').toggle
 vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').toggle_vertical() end, { desc = "Create REPL in vertical or horizontal split"})
 
 vim.keymap.set("n", [your keymap], function() require('nvim-python-repl').open_repl() end, { desc = "Opens the REPL in a window split"})
+
+vim.keymap.set({'n', 'v', 'i', 't'}, '[your keymap]', function() require('nvim-python-repl').toggle_repl_win() end, { desc = "Opens the REPL in a window split" })
 ```
 
 ### Bonus 

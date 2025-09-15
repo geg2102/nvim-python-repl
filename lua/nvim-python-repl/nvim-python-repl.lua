@@ -49,17 +49,28 @@ local get_statement_definition = function(filetype)
     return node
 end
 
+local create_win = function(config, bufid, orig_win)
+    local split_dir = 'left'
+    if config.split_dir then
+        split_dir = config.split_dir
+    end
+    if config.vsplit then
+        split_dir = 'above'
+    end
+    local win = vim.api.nvim_open_win(bufid, true, {
+        split = split_dir,
+        win = orig_win
+    })
+    return win
+end
+
 local term_open = function(filetype, config)
     local orig_win = vim.api.nvim_get_current_win()
     if M.term.chanid ~= nil then return end
-    if config.vsplit then
-        api.nvim_command('vsplit')
-    else
-        api.nvim_command('split')
-    end
     local buf = vim.api.nvim_create_buf(true, true)
-    local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(win, buf)
+
+    local win = create_win(config, buf, orig_win)
+
     local choice = ''
     if config.prompt_spawn then
         choice = vim.fn.input("REPL spawn command: ")
@@ -207,59 +218,59 @@ local construct_message_from_node = function(filetype)
 end
 
 local function get_current_markdown_codeblock()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
-  local cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(0))  -- 0-indexed
-  cursor_row = cursor_row + 1  -- Convert to 1-indexed
+    local bufnr = vim.api.nvim_get_current_buf()
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
+    local cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(0)) -- 0-indexed
+    cursor_row = cursor_row + 1                                -- Convert to 1-indexed
 
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  -- Pattern for code fence: ^\s*````\s*(\w+)? -> matches ``` or ```python
-  local fence_pattern = "^%s*```%s*()"
+    -- Pattern for code fence: ^\s*````\s*(\w+)? -> matches ``` or ```python
+    local fence_pattern = "^%s*```%s*()"
 
-  -- Step 1: Scan upward to find the opening fence
-  local start_line = nil
-  local end_line = nil
-  local language = "plaintext"
+    -- Step 1: Scan upward to find the opening fence
+    local start_line = nil
+    local end_line = nil
+    local language = "plaintext"
 
-  -- Go up from cursor to find the start fence
-  for i = cursor_row - 1, 1, -1 do
-    if i <= line_count and lines[i - 1]:match(fence_pattern) then
-      language = lines[i - 1]:match("^%s*```%s*(%w+)") or "plaintext"
-      start_line = i
-      break
+    -- Go up from cursor to find the start fence
+    for i = cursor_row - 1, 1, -1 do
+        if i <= line_count and lines[i - 1]:match(fence_pattern) then
+            language = lines[i - 1]:match("^%s*```%s*(%w+)") or "plaintext"
+            start_line = i
+            break
+        end
+        if i == 1 or lines[i - 1]:match("^%s*```") then
+            -- Hit another fence or start — not in a valid block
+            return nil
+        end
     end
-    if i == 1 or lines[i - 1]:match("^%s*```") then
-      -- Hit another fence or start — not in a valid block
-      return nil
+
+    if not start_line then return nil end -- No opening fence found
+
+    -- Step 2: Scan downward to find the closing fence
+    for i = start_line + 1, line_count do
+        if lines[i - 1]:match("^%s*```%s*$") then
+            end_line = i - 1 -- Exclude closing fence
+            break
+        end
     end
-  end
 
-  if not start_line then return nil end  -- No opening fence found
+    if not end_line then end_line = line_count end -- In case no closing fence
 
-  -- Step 2: Scan downward to find the closing fence
-  for i = start_line + 1, line_count do
-    if lines[i - 1]:match("^%s*```%s*$") then
-      end_line = i - 1  -- Exclude closing fence
-      break
+    -- Step 3: Extract content between fences
+    local content_lines = {}
+    for i = start_line, end_line - 1 do
+        table.insert(content_lines, lines[i])
     end
-  end
 
-  if not end_line then end_line = line_count end  -- In case no closing fence
+    local content = table.concat(content_lines, "\n")
 
-  -- Step 3: Extract content between fences
-  local content_lines = {}
-  for i = start_line, end_line - 1 do
-    table.insert(content_lines, lines[i])
-  end
-
-  local content = table.concat(content_lines, "\n")
-
-  return {
-    language = language,
-    content = content,
-    range = { start_line - 1, end_line }  -- 0-indexed for API use
-  }
+    return {
+        language = language,
+        content = content,
+        range = { start_line - 1, end_line } -- 0-indexed for API use
+    }
 end
 
 -- local construct_message_from_node = function(filetype)
@@ -423,6 +434,26 @@ end
 M.open_repl = function(config)
     local filetype = vim.bo.filetype
     term_open(filetype, config)
+end
+
+M.toggle_repl_win = function(config)
+    vim.print(vim.inspect(M.term))
+
+    -- create if not exists
+    if M.term.bufid == nil or M.term.bufid <= 0 then
+        M.open_repl(config)
+        return
+    end
+
+    -- toggle
+    if M.term.winid == nil or M.term.winid <= 0 then
+        local orig_win = vim.api.nvim_get_current_win()
+        M.term.winid = create_win(config, M.term.bufid, orig_win)
+    else
+        vim.print("hiding repl window "..M.term.winid)
+        vim.api.nvim_win_hide(M.term.winid)
+        M.term.winid = nil
+    end
 end
 
 return M

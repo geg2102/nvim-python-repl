@@ -63,4 +63,8 @@ function M.open_repl()
     repl.open_repl(M)
 end
 
+function M.toggle_repl_win()
+    repl.toggle_repl_win(M)
+end
+
 return M
