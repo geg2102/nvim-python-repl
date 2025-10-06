@@ -54,8 +54,8 @@ local create_win = function(config, bufid, orig_win)
     if config.split_dir then
         split_dir = config.split_dir
     end
-    if config.vsplit then
-        split_dir = 'above'
+    if config.vsplit and not config.split_dir then
+        split_dir = 'left' -- keep this for backwards compatibility
     end
     local win = vim.api.nvim_open_win(bufid, true, {
         split = split_dir,
@@ -221,7 +221,7 @@ local function get_current_markdown_codeblock()
     local bufnr = vim.api.nvim_get_current_buf()
     local line_count = vim.api.nvim_buf_line_count(bufnr)
     local cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(0)) -- 0-indexed
-    cursor_row = cursor_row + 1                                -- Convert to 1-indexed
+    cursor_row = cursor_row + 1                                  -- Convert to 1-indexed
 
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
@@ -331,7 +331,11 @@ local send_message = function(filetype, message, config)
     end
     if config.execute_on_send then
         vim.wait(20)
-        api.nvim_chan_send(M.term.chanid, "\r\r")
+        if vim.fn.has('win32') == 1 then
+            api.nvim_chan_send(M.term.chanid, "\r\r")
+        else
+            api.nvim_chan_send(M.term.chanid, "\r")
+        end
     end
 end
 
@@ -450,7 +454,7 @@ M.toggle_repl_win = function(config)
         local orig_win = vim.api.nvim_get_current_win()
         M.term.winid = create_win(config, M.term.bufid, orig_win)
     else
-        vim.print("hiding repl window "..M.term.winid)
+        vim.print("hiding repl window " .. M.term.winid)
         vim.api.nvim_win_hide(M.term.winid)
         M.term.winid = nil
     end
