@@ -331,11 +331,7 @@ local send_message = function(filetype, message, config)
     end
     if config.execute_on_send then
         vim.wait(20)
-        if vim.fn.has('win32') == 1 then
-            api.nvim_chan_send(M.term.chanid, "\r\r")
-        else
-            api.nvim_chan_send(M.term.chanid, "\r")
-        end
+        api.nvim_chan_send(M.term.chanid, "\r\r")
     end
 end
 
